@@ -12,7 +12,6 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-
 @Component
 @ServerEndpoint("/websocket/{userId}")
 public class WebSocketService {
@@ -61,6 +60,11 @@ public class WebSocketService {
 
     @OnMessage
     public void onMessage(String message) {
+        try {
+            sendMessage("俺收到了!你的消息是："+message);
+        } catch (Exception e) {
+            logger.error("用户:" + userId + ",网络异常!!!!!!");
+        }
         logger.info("用户消息:" + userId + ",报文:" + message);
         System.out.println("websocket message: " + message);
     }
@@ -83,7 +87,13 @@ public class WebSocketService {
      * 实现服务器主动推送
      */
     public void sendMessage(String message) throws Exception {
-        this.session.getBasicRemote().sendText(message);
+//        webSocketMap.get(userId).session.getBasicRemote().sendText(message);
+        if (webSocketMap.get(userId).session.isOpen()) {
+            webSocketMap.get(userId).session.getBasicRemote().sendText(message);
+        }else {
+            logger.info("用户"+userId+"已经关闭连接");
+        }
+//        this.session.getBasicRemote().sendText(message);
     }
 
     /**
