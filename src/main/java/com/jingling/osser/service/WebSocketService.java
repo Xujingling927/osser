@@ -10,8 +10,11 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
 @Component
 @ServerEndpoint("/websocket/{userId}")
 public class WebSocketService {
@@ -36,6 +39,7 @@ public class WebSocketService {
      * 接收 userId
      */
     private String userId = "";
+
     @OnOpen
     public void onOpen(Session session, @PathParam("userId") String userId) {
         this.session = session;
@@ -61,7 +65,7 @@ public class WebSocketService {
     @OnMessage
     public void onMessage(String message) {
         try {
-            sendMessage("俺收到了!你的消息是："+message);
+            sendMessage("俺收到了!你的消息是：" + message);
         } catch (Exception e) {
             logger.error("用户:" + userId + ",网络异常!!!!!!");
         }
@@ -86,14 +90,16 @@ public class WebSocketService {
     /**
      * 实现服务器主动推送
      */
-    public void sendMessage(String message) throws Exception {
-//        webSocketMap.get(userId).session.getBasicRemote().sendText(message);
+    public void sendMessage(String message) throws IOException {
         if (webSocketMap.get(userId).session.isOpen()) {
-            webSocketMap.get(userId).session.getBasicRemote().sendText(message);
-        }else {
-            logger.info("用户"+userId+"已经关闭连接");
+            for (Map.Entry<String, WebSocketService> entry : webSocketMap.entrySet()) {
+                if (!entry.getKey().equals(userId)) {
+                    entry.getValue().session.getBasicRemote().sendText(message);
+                }
+            }
+        } else {
+            logger.info("用户" + userId + "已经关闭连接");
         }
-//        this.session.getBasicRemote().sendText(message);
     }
 
     /**
