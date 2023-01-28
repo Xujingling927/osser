@@ -19,7 +19,10 @@ import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -43,6 +46,8 @@ public class WebSocketService {
     private static ConcurrentHashMap<String, WebSocketService> webSocketMap = new ConcurrentHashMap<>();
 
     private static String timingText = "";
+
+    private static Map<Long,String> map  = new HashMap<>();
 
     /**
      * 与某个客户端的连接会话，需要通过它来给客户端发送数据
@@ -75,7 +80,7 @@ public class WebSocketService {
         try {
             MouseLocation mouseLocation = mapper.readValue(message, MouseLocation.class);
             mouseLocation.setUserId(Long.valueOf(userId));
-            timingText = mapper.writeValueAsString(mouseLocation);
+            map.put(Long.valueOf(userId),mapper.writeValueAsString(mouseLocation));
         } catch (JacksonException e) {
             logger.error(e.getMessage());
         } catch (Exception e) {
@@ -102,11 +107,15 @@ public class WebSocketService {
      * 实现服务器主动推送
      */
     @Scheduled(fixedRate = 5000)
-    public void sendMessage() throws IOException {
+    public static void sendMessage() throws IOException {
+        timingText = mapper.writeValueAsString(map.values());
+
         logger.info(String.format("最新坐标信息:  %s", timingText));
+
         for (Map.Entry<String, WebSocketService> entry : webSocketMap.entrySet()) {
             entry.getValue().session.getBasicRemote().sendText(timingText);
         }
+
     }
 
     /**
