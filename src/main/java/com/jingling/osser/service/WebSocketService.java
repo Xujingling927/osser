@@ -1,7 +1,15 @@
 package com.jingling.osser.service;
 
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jingling.osser.entity.MouseLocation;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.OnClose;
@@ -17,9 +25,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 @ServerEndpoint("/websocket/{userId}")
+@EnableScheduling
+@Getter
 public class WebSocketService {
 
     private static final Logger logger = LoggerFactory.getLogger(WebSocketService.class);
+
+    private static final ObjectMapper mapper = new ObjectMapper();
     /**
      * 在线人数
      */
@@ -29,6 +41,8 @@ public class WebSocketService {
      * 用来存放每个客户端对应的 WebSocketServer 对象
      */
     private static ConcurrentHashMap<String, WebSocketService> webSocketMap = new ConcurrentHashMap<>();
+
+    private static String timingText = "";
 
     /**
      * 与某个客户端的连接会话，需要通过它来给客户端发送数据
@@ -52,25 +66,22 @@ public class WebSocketService {
             webSocketMap.put(userId, this);
             addOnlineCount();
         }
-        logger.info("用户连接:" + userId + ",当前在线人数为:" + getOnlineCount());
-        try {
-            sendMessage("连接成功");
-        } catch (Exception e) {
-            logger.error("用户:" + userId + ",网络异常!!!!!!");
-        }
-
+        logger.info(String.format("用户id：%s已连接,当前在线人数为:%s", userId, getOnlineCount()));
         System.out.println("websocket open");
     }
 
     @OnMessage
     public void onMessage(String message) {
         try {
-            sendMessage("俺收到了!你的消息是：" + message);
+            MouseLocation mouseLocation = mapper.readValue(message, MouseLocation.class);
+            mouseLocation.setUserId(Long.valueOf(userId));
+            timingText = mapper.writeValueAsString(mouseLocation);
+        } catch (JacksonException e) {
+            logger.error(e.getMessage());
         } catch (Exception e) {
-            logger.error("用户:" + userId + ",网络异常!!!!!!");
+            logger.error(String.format("用户:%s,网络异常!!!!!!", userId));
         }
-        logger.info("用户消息:" + userId + ",报文:" + message);
-        System.out.println("websocket message: " + message);
+        logger.info(String.format("用户id:%s,报文:%s", userId, timingText));
     }
 
     @OnClose
@@ -79,7 +90,7 @@ public class WebSocketService {
             webSocketMap.remove(userId);
             subOnlineCount();
         }
-        logger.info("用户退出:" + userId + ",当前在线人数为:" + getOnlineCount());
+        logger.info(String.format("用户退出:%s,当前在线人数为:%s", userId, getOnlineCount()));
         System.out.println("websocket close");
     }
 
@@ -90,15 +101,11 @@ public class WebSocketService {
     /**
      * 实现服务器主动推送
      */
-    public void sendMessage(String message) throws IOException {
-        if (webSocketMap.get(userId).session.isOpen()) {
-            for (Map.Entry<String, WebSocketService> entry : webSocketMap.entrySet()) {
-                if (!entry.getKey().equals(userId)) {
-                    entry.getValue().session.getBasicRemote().sendText(message);
-                }
-            }
-        } else {
-            logger.info("用户" + userId + "已经关闭连接");
+    @Scheduled(fixedRate = 5000)
+    public void sendMessage() throws IOException {
+        logger.info(String.format("最新坐标信息:  %s", timingText));
+        for (Map.Entry<String, WebSocketService> entry : webSocketMap.entrySet()) {
+            entry.getValue().session.getBasicRemote().sendText(timingText);
         }
     }
 

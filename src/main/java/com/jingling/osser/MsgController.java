@@ -13,7 +13,7 @@ public class MsgController {
 
     @PostMapping ("/sendMsg")
     public void sendMsg(@RequestBody String message) throws Exception {
-        webSocketService.sendMessage(message);
+        //webSocketService.sendMessage();
     }
 
 }
