@@ -93,6 +93,7 @@ public class WebSocketService {
     public void onClose() {
         if (webSocketMap.containsKey(userId)) {
             webSocketMap.remove(userId);
+            map.remove(Long.valueOf(userId));
             subOnlineCount();
         }
         logger.info(String.format("用户退出:%s,当前在线人数为:%s", userId, getOnlineCount()));
