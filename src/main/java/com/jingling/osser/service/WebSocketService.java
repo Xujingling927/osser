@@ -1,11 +1,9 @@
 package com.jingling.osser.service;
 
 import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jingling.osser.entity.MouseLocation;
 import lombok.Getter;
-import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -20,9 +18,7 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -47,7 +43,7 @@ public class WebSocketService {
 
     private static String timingText = "";
 
-    private static Map<Long,String> map  = new HashMap<>();
+    private static Map<Long,MouseLocation> map  = new HashMap<>();
 
     /**
      * 与某个客户端的连接会话，需要通过它来给客户端发送数据
@@ -80,7 +76,7 @@ public class WebSocketService {
         try {
             MouseLocation mouseLocation = mapper.readValue(message, MouseLocation.class);
             mouseLocation.setUserId(Long.valueOf(userId));
-            map.put(Long.valueOf(userId),mapper.writeValueAsString(mouseLocation));
+            map.put(Long.valueOf(userId),mouseLocation);
         } catch (JacksonException e) {
             logger.error(e.getMessage());
         } catch (Exception e) {
