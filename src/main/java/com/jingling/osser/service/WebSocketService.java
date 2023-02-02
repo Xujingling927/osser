@@ -43,7 +43,7 @@ public class WebSocketService {
 
     private static String timingText = "";
 
-    private static Map<Long,MouseLocation> map  = new HashMap<>();
+    private static Map<String,MouseLocation> map  = new HashMap<>();
 
     /**
      * 与某个客户端的连接会话，需要通过它来给客户端发送数据
@@ -75,8 +75,8 @@ public class WebSocketService {
     public void onMessage(String message) {
         try {
             MouseLocation mouseLocation = mapper.readValue(message, MouseLocation.class);
-            mouseLocation.setUserId(Long.valueOf(userId));
-            map.put(Long.valueOf(userId),mouseLocation);
+            mouseLocation.setUserId(userId);
+            map.put(userId,mouseLocation);
         } catch (JacksonException e) {
             logger.error(e.getMessage());
         } catch (Exception e) {
