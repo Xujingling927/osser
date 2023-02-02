@@ -89,7 +89,7 @@ public class WebSocketService {
     public void onClose() {
         if (webSocketMap.containsKey(userId)) {
             webSocketMap.remove(userId);
-            map.remove(Long.valueOf(userId));
+            map.remove(userId);
             subOnlineCount();
         }
         logger.info(String.format("用户退出:%s,当前在线人数为:%s", userId, getOnlineCount()));
@@ -103,11 +103,11 @@ public class WebSocketService {
     /**
      * 实现服务器主动推送
      */
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 3000)
     public static void sendMessage() throws IOException {
         timingText = mapper.writeValueAsString(map.values());
 
-        logger.info(String.format("最新坐标信息:  %s", timingText));
+        //logger.info(String.format("最新坐标信息:  %s", timingText));
 
         for (Map.Entry<String, WebSocketService> entry : webSocketMap.entrySet()) {
             entry.getValue().session.getBasicRemote().sendText(timingText);
