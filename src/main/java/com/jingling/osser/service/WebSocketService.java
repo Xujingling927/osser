@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
-@ServerEndpoint("/websocket/{userId}")
+@ServerEndpoint("/{userId}")
 @EnableScheduling
 @Getter
 public class WebSocketService {
