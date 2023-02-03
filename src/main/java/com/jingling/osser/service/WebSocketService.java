@@ -75,7 +75,7 @@ public class WebSocketService {
     public void onMessage(String message) {
         try {
             MouseLocation mouseLocation = mapper.readValue(message, MouseLocation.class);
-            mouseLocation.setUserId(userId);
+            mouseLocation.setId(userId);
             map.put(userId,mouseLocation);
         } catch (JacksonException e) {
             logger.error(e.getMessage());
