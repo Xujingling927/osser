@@ -6,8 +6,6 @@ import com.jingling.osser.entity.MouseLocation;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.OnClose;
@@ -24,7 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 @ServerEndpoint("/{userId}")
-@EnableScheduling
 @Getter
 public class WebSocketService {
 
@@ -77,6 +74,7 @@ public class WebSocketService {
             MouseLocation mouseLocation = mapper.readValue(message, MouseLocation.class);
             mouseLocation.setId(userId);
             map.put(userId,mouseLocation);
+            sendMessage();
         } catch (JacksonException e) {
             logger.error(e.getMessage());
         } catch (Exception e) {
@@ -102,7 +100,6 @@ public class WebSocketService {
     /**
      * 实现服务器主动推送
      */
-    @Scheduled(fixedRate = 100)
     public static void sendMessage() throws IOException {
         timingText = mapper.writeValueAsString(map.values());
 
