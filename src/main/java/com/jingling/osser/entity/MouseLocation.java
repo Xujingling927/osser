@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MouseLocation {
     private String id;
+    private String name;
     private Integer x;
     private Integer y;
 
